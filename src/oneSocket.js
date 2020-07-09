@@ -78,7 +78,7 @@
         const { result_code, result_data } = res
         const service = (result_data || {})[that.defaultOption.pathKey]
         if (!service || service === that.defaultOption.pathKey) return
-        const callback = that.callbackMap[service]
+        const callback = that.callbackMap[service].shift()
         if (result_code === 1) {
             callback && callback[0](res) && delete that.callbackMap[service]
         } else {
@@ -121,7 +121,14 @@
 
     OneSocket.prototype.sendData = function(path, data) {
         return new Promise(function(resolve, reject) {
-            this.callbackMap[path] = [resolve, reject]
+            if (!this.callbackMap[path]) {
+                this.callbackMap[path] = [
+                    [resolve, reject]
+                ]
+            } else {
+                this.callbackMap[path].push([resolve, reject])
+            }
+
             queueSend(JSON.stringify(data), this)
         }.bind(this))
     }
