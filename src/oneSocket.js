@@ -20,16 +20,26 @@
     let ws = null
     let promiseCallback = []
     const dataQueue = []
+    const serviceMap = []
+    const watchEventList = []
 
     function OneSocket(option) {
         this.defaultOption = {
             url: '',
             pathKey: 'service',
+            mode: 'vague', // 可选参数 exact， vague
             timeout: 13000,
             heartbeatPack: {
                 lang: "zh_cn",
                 service: "ping",
                 token: "b504014e-ca8b-4770-b922-cb5493bbee9d"
+            },
+            heartbeatCallback: function(res) {},
+            responseParser: function(res, next, scope) {
+                const data = JSON.parse(res.data)
+                const service = data.service
+                const { result_code } = data
+                next(data, service, result_code === 1, scope)
             }
         }
         this.callbackMap = {}
@@ -55,36 +65,59 @@
     const bindEvent = function(that) {
         const { resolve, reject } = promiseCallback
         ws.addEventListener('open', function() {
-            resolve(true)
+            if (resolve) {
+                resolve(true)
+                promiseCallback = {}
+            }
         })
 
         ws.addEventListener('close', function() {
             // socket关闭后，将停止所有请求
-            clearTimeout(this.timer)
-            clearTimeout(this.heartbeatTimer)
-        }.bind(this))
+            clearTimeout(that.timer)
+            clearTimeout(that.heartbeatTimer)
+            console.warn('socket has closed')
+            if (reject) {
+                reject(false)
+                promiseCallback = {}
+            } else {
+                watchEventList['error'].forEach((callback) => {
+                    callback(err)
+                })
+            }
+        })
 
-        ws.addEventListener('error', function() {
-            reject(false)
+        ws.addEventListener('error', function(err) {
+            if (reject) {
+                reject(false)
+                promiseCallback = {}
+            } else {
+                watchEventList['error'].forEach((callback) => {
+                    callback(err)
+                })
+            }
         })
 
         ws.onmessage = function(res) {
-            const data = JSON.parse(res.data)
-            messageHouse(data, that)
+            that.defaultOption.responseParser(res, messageHouse, that)
         }
     }
 
-    const messageHouse = function(res, that) {
-        const { result_code, result_data } = res
-        const service = (result_data || {})[that.defaultOption.pathKey]
-        if (!service || service === that.defaultOption.pathKey) return
-        const callback = that.callbackMap[service].shift()
-        if (result_code === 1) {
-            callback && callback[0](res) && delete that.callbackMap[service]
-        } else {
-            callback && callback[1](res) && delete that.callbackMap[service]
+    const messageHouse = function(res, service, isSuccess, that) {
+        const { result_code } = res
+        if (!service || (serviceMap.indexOf(service) < 0 && !watchEventList[service])) {
+            console.warn(service + ' is not a service')
+            return
         }
-
+        (watchEventList[service] || []).forEach(function(callback) {
+            callback(res)
+        })
+        if (!that.callbackMap[service]) return
+        const callback = that.callbackMap[service].shift()
+        if (isSuccess) {
+            callback ? callback[0](res) : console.error('callback is undefined')
+        } else {
+            callback ? callback[1](res) : console.error('callback is undefined')
+        }
     }
 
     const queueSend = function(data, that) {
@@ -114,12 +147,35 @@
     const heartbeat = function(that) {
         const { heartbeatPack, timeout } = that.defaultOption
         that.heartbeatTimer = setTimeout(function() {
+            that.callbackMap['ping'] = [
+                [that.defaultOption.heartbeatCallback, that.defaultOption.heartbeatCallback]
+            ]
             ws.send(JSON.stringify(heartbeatPack))
             heartbeat(that)
         }, timeout)
     }
 
+    function uuid() {
+        var s = [];
+        var hexDigits = "0123456789abcdef";
+        for (var i = 0; i < 36; i++) {
+            s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+        }
+        s[14] = "4"; // bits 12-15 of the time_hi_and_version field to 0010
+        s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1); // bits 6-7 of the clock_seq_hi_and_reserved to 01
+        s[8] = s[13] = s[18] = s[23] = "-";
+
+        var uuid = s.join("");
+        return uuid;
+    }
+
     OneSocket.prototype.sendData = function(path, data) {
+        serviceMap.push(path)
+        const uuidString = uuid()
+        const { mode } = this.defaultOption
+        if (mode === 'exact') {
+            path = uuidString
+        }
         return new Promise(function(resolve, reject) {
             if (!this.callbackMap[path]) {
                 this.callbackMap[path] = [
@@ -128,7 +184,9 @@
             } else {
                 this.callbackMap[path].push([resolve, reject])
             }
-
+            if (mode === 'exact') {
+                data = Object.assign({}, data, { id: uuidString })
+            }
             queueSend(JSON.stringify(data), this)
         }.bind(this))
     }
@@ -148,9 +206,32 @@
 
     OneSocket.prototype.catch = function(callback) {
         return this.__Promise__.catch(function(err) {
-            callback(err)
+            return callback(err)
         })
     }
 
+    OneSocket.prototype.onHeartbeat = function(callback) {
+        serviceMap.push('ping')
+        this.defaultOption.heartbeatCallback = callback
+    }
+
+    OneSocket.prototype.on = function(name, callback) {
+        if (watchEventList[name]) {
+            watchEventList[name].push(callback)
+        } else {
+            watchEventList[name] = [callback]
+        }
+    }
+
+    OneSocket.prototype.remove = function(name, callback) {
+        const index = watchEventList[name].findIndex(item => {
+            return item === callback
+        })
+        watchEventList.splice(index, 1)
+    }
+
+    OneSocket.prototype.destory = function(name) {
+        delete watchEventList[name]
+    }
     return OneSocket
 })
