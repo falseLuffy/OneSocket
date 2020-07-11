@@ -1,6 +1,7 @@
 # OneSocket 
 ### 我们的口号是“像使用axios和fetch 一样使用websocket”
-#### OneSocket 是一个是用来实现单socket通信websocket工具，实现了顺序队列请求，每个请求可以有50ms（可配置）的间隔时间，并自带心跳请求。支持Promise调用，只要做一些简单的配置，可以像使用axios那样简单的使用socket请求了
+
+OneSocket 是一个是用来实现单socket通信websocket工具，实现了顺序队列请求，每个请求可以有50ms（可配置）的间隔时间，并自带心跳请求。支持Promise调用，只要做一些简单的配置，可以像使用axios那样简单的使用socket请求了
 
 以前我们写http请求是这样的
 ```
