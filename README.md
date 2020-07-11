@@ -121,7 +121,6 @@ new OneSocket({
 * heartbeat Boolean 是否需要心跳请求
 * heartbeatTime Number  心跳请求的间隔时间
 * heartbeatPack JSONString 心跳请求数据
-* heartbeatCallback Function  心跳请求成功的回调
 * responseParser  must  socket请求返回数据解析函数
 
 

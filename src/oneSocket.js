@@ -34,7 +34,6 @@
                 service: "ping",
                 token: "b504014e-ca8b-4770-b922-cb5493bbee9d"
             },
-            heartbeatCallback: function(res) {},
             responseParser: function(res, next, scope) {
                 const data = JSON.parse(res.data)
                 const service = data.service
@@ -103,16 +102,24 @@
     }
 
     const messageHouse = function(res, service, isSuccess, that) {
-        const { result_code } = res
-        if (!service || (serviceMap.indexOf(service) < 0 && !watchEventList[service])) {
-            console.warn(service + ' is not a service')
+        let path = null
+        let watchedName = null
+        if(that.defaultOption.mode === 'exact'){
+          path = service.id
+          watchedName = service.service
+        } else {
+          path = service.service
+          watchedName = service.service
+        }
+        if (!path || (serviceMap.indexOf(path) < 0 && !watchEventList[watchedName])) {
+            console.warn(path + ' is not a service')
             return
         }
-        (watchEventList[service] || []).forEach(function(callback) {
+        (watchEventList[watchedName] || []).forEach(function(callback) {
             callback(res)
         })
-        if (!that.callbackMap[service]) return
-        const callback = that.callbackMap[service].shift()
+        if (!that.callbackMap[path]) return
+        const callback = that.callbackMap[path].shift()
         if (isSuccess) {
             callback ? callback[0](res) : console.error('callback is undefined')
         } else {
@@ -147,10 +154,9 @@
     const heartbeat = function(that) {
         const { heartbeatPack, timeout } = that.defaultOption
         that.heartbeatTimer = setTimeout(function() {
-            that.callbackMap['ping'] = [
-                [that.defaultOption.heartbeatCallback, that.defaultOption.heartbeatCallback]
-            ]
-            ws.send(JSON.stringify(heartbeatPack))
+            ws.send(JSON.stringify(Object.assign({}, heartbeatPack, {
+              id: uuid()
+            })))
             heartbeat(that)
         }, timeout)
     }
@@ -170,12 +176,14 @@
     }
 
     OneSocket.prototype.sendData = function(path, data) {
-        serviceMap.push(path)
         const uuidString = uuid()
         const { mode } = this.defaultOption
+
         if (mode === 'exact') {
             path = uuidString
         }
+
+        serviceMap.push(path)
         return new Promise(function(resolve, reject) {
             if (!this.callbackMap[path]) {
                 this.callbackMap[path] = [
