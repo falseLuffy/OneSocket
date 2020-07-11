@@ -1,37 +1,47 @@
-const net = require('net');
-const port = 9000;
-const hostname = '127.0.0.1';
+/**
+ * create by falseLuffy
+ **/
+const WebSocket = require('ws');
+// const appendLog = require('./logs/index')
 
-// 定义两个变量， 一个用来计数，一个用来保存客户端
-let clients = {};
-let clientName = 0;
+const server = new WebSocket.Server({ port: 20001 });
 
-// 创建服务器
-const server = new net.createServer();
+console.log(new Date().toUTCString() + "启动一个websocket服务,端口号为20001")
 
-server.on('connection', (client) => {
-    client.name = ++clientName; // 给每一个client起个名
-    clients[client.name] = client; // 将client保存在clients
-
-    client.on('data', function(msg) { //接收client发来的信息
-        console.log(`客户端${client.name}发来一个信息：${msg}`);
-        clients.forEach(client => {
-            client.write()
-        })
-    });
-
-    client.on('error', function(e) { //监听客户端异常
-        console.log('client error' + e);
-        client.end();
-    });
-
-    client.on('close', function() {
-        delete clients[client.name];
-        console.log(`客户端${ client.name }下线了`);
-    });
-
+server.on('open', function open(ws, req) {
+  console.log(`connect a client ${req.headers['x-real-ip']}`);
 });
 
-server.listen(port, hostname, function() {
-    console.log(`服务器运行在：http://${hostname}:${port}`);
+server.on('close', function close(ws, req) {
+  console.log(`${req.headers['x-real-ip']} has disconnected`);
+});
+
+server.on('connection', function connection(ws, req) {
+  const ip = req.headers['x-real-ip'];
+  // const port = req.connection.remotePort;
+  const clientName = ip;
+
+  console.log(`connect a client ${ip}`);
+
+  // 发送欢迎信息给客户端
+  // ws.send("Welcome " + clientName);
+
+  ws.on('message', function incoming(message) {
+    // appendLog(message, clientName)
+    // 广播消息给所有客户端
+    // server.clients.forEach(function each(client) {
+    //   if (client.readyState === WebSocket.OPEN) {
+    //     client.send( clientName + " -> " + message);
+    //   }
+    // });
+
+    let timeout = parseInt(1000 + Math.random() * 2000)
+    setTimeout(() => {
+      ws.send(JSON.stringify(Object.assign({}, JSON.parse(message), {
+        result_code: 1,
+        result_data: [],
+        timeout: timeout
+      })));
+    }, timeout)
+  });
 });

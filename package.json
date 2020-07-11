@@ -11,5 +11,8 @@
     "Promise"
   ],
   "author": "falseLuffy",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^7.3.1"
+  }
 }
