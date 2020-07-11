@@ -114,8 +114,10 @@ new OneSocket({
 
 ### 配置项
 * url   socket请求地址
-* pathKey 
-* baseUrl,
+* baseUrl 
+* timeout socket请求时间
+* interval  每个请求的延迟时间
+* heartbeatInterval: 100000, 心跳请求的间隔时间
 * mode  String
 >  * 可选参数 vague: 模糊模式，使用service名定位回调，较为模糊，每个service可能对应多个回调， 
 >  * exact：根据uuid定位回调,定位准确，每个uuid对应唯一回调
