@@ -59,7 +59,7 @@ socket.addEventListener('message', function(res) {
 
 ```
 
-写完这些我想打人，为什么要我承担这些，我还只是个孩子。。。
+写完这些我想打人，为什么要我承担这些。。
 
 现在我们有了OneSocket
 
@@ -108,7 +108,7 @@ new OneSocket({
 })
 
 ```
-
+这样我们就能有个非常清晰的业务逻辑，不论开发和维护过程中都将非常简单
 
 
 
