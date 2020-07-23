@@ -120,7 +120,7 @@ var myResult;
       watchedName = service.service
     }
     if (!path || (serviceMap.indexOf(path) < 0 && !watchEventList[watchedName])) {
-      console.warn(path + ' is not a service')
+      console.warn(path + ' is not a defined service')
       return
     }
     (watchEventList[watchedName] || []).forEach(function (callback) {
@@ -248,10 +248,6 @@ var myResult;
 
   OneSocket.prototype.destory = function (name) {
     delete watchEventList[name]
-  }
-
-  OneSocket.prototype.reconnect = function () {
-    this.init()
   }
 
   OneSocket.prototype.updateConfig = function ({heartbeatPack}) {
