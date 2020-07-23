@@ -113,24 +113,26 @@ new OneSocket({
 
 
 ### 配置项
-* url   socket请求地址
-* baseUrl 
-* timeout socket请求时间
-* interval  每个请求的延迟时间
-* heartbeatInterval: 100000, 心跳请求的间隔时间
-* mode  String
->  * 可选参数 vague: 模糊模式，使用service名定位回调，较为模糊，每个service可能对应多个回调， 
->  * exact：根据uuid定位回调,定位准确，每个uuid对应唯一回调
-* heartbeat Boolean 是否需要心跳请求
-* heartbeatTime Number  心跳请求的间隔时间
-* heartbeatPack JSONString 心跳请求数据
-* responseParser  must  socket请求返回数据解析函数
+|字段名|类型|默认值|描述|
+|-----------------|--------------|-------------|-----------------|
+| url             |string|required     | socket请求地址 |
+|timeout          |number|默认10000     | socket请求时间|
+|interval         |number|默认50ms      | 每个请求的延迟时间|
+|mode             |string|              |                  |
+|                 ||可选参数 vague|模糊模式，使用service名定位回调，较为模糊，每个service可能对应多个回调|
+|                 ||可选参数exact |根据uuid定位回调,定位准确，每个uuid对应唯一回调
+|hasHeartbeat     |boolean|             |是否存在心跳请求，默认true
+|heartbeatInterval|number|10000        |心跳请求的间隔时间
+|heartbeatPack    |Object|             |JSONString 心跳请求数据
+|responseParser   |function| required    |  socket请求返回数据解析函数
 
 
 ### API
-* sendData  发送数据 
-* close  关闭请求 无参数
-* updateOption  更新配置项
-* on  监听后端主动推送的消息 参数：name,callback
-* remove  移除用户监听的消息的一个回调， 参数：name,callback
-* destory 销毁指定名称的所有监控回调，参数； name 
+|方法名|功能|参数|
+|---|---|----|
+| sendData | 发送数据 |无参数
+| close|  关闭请求 |无参数
+| updateConfig|  更新配置项| Object: {heartbeatPack:{}}
+| on|  监听后端主动推送的消息 |参数：name,callback
+| remove | 移除用户监听的消息的一个回调，| 参数：name,callback
+| destory |销毁指定名称的所有监控回调，|参数； name 
