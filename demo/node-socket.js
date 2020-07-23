@@ -4,9 +4,9 @@
 const WebSocket = require('ws');
 // const appendLog = require('./logs/index')
 
-const server = new WebSocket.Server({ port: 20001 });
+const server = new WebSocket.Server({ port: 20000 });
 
-console.log(new Date().toUTCString() + "启动一个websocket服务,端口号为20001")
+console.log(new Date().toUTCString() + "启动一个websocket服务,端口号为20000")
 
 server.on('open', function open(ws, req) {
   console.log(`connect a client ${req.headers['x-real-ip']}`);
@@ -39,7 +39,7 @@ server.on('connection', function connection(ws, req) {
     setTimeout(() => {
       ws.send(JSON.stringify(Object.assign({}, JSON.parse(message), {
         result_code: 1,
-        result_data: [],
+        result_data: JSON.parse(message),
         timeout: timeout
       })));
     }, timeout)
