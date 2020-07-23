@@ -182,7 +182,7 @@ var myResult;
     return s.join('')
   }
 
-  OneSocket.prototype.sendData = function (path, data) {
+  OneSocket.prototype.send = function (path, data) {
     const uuidString = uuid()
     const { mode } = this.defaultOption
 
