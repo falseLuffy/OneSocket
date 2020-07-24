@@ -88,14 +88,13 @@ const bindEvent = function (that) {
 
 const messageHouse = function (res, service, isSuccess, that) {
   let path = null
-  let watchedName = null
+  const watchedName = service.service
   if (that.defaultOption.mode === 'exact') {
     path = service.id
-    watchedName = service.service
   } else {
     path = service.service
-    watchedName = service.service
   }
+
   if (!path || (serviceMap.indexOf(path) < 0 && !watchEventList[watchedName])) {
     console.warn(path + ' is not a defined service')
     return
@@ -121,8 +120,7 @@ const queueSend = function (data, that) {
 
 const send = function (that) {
   status = true
-  //  如果在心跳请求等待时间内再次发送请求，则心跳请求取消
-  clearTimeout(that.heartbeatTimer)
+  clearTimeout(that.heartbeatTimer) //  如果在心跳请求等待时间内再次发送请求，则心跳请求取消
   that.timer = setTimeout(function () {
     const data = dataQueue.shift()
     ws.send(data)

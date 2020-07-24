@@ -1,7 +1,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
-  (global = global || self, global.OneSocket = factory());
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.OneSocket = factory());
 }(this, (function () { 'use strict';
 
   if (!WebSocket) {
@@ -101,14 +101,12 @@
 
   var messageHouse = function messageHouse(res, service, isSuccess, that) {
     var path = null;
-    var watchedName = null;
+    var watchedName = service.service;
 
     if (that.defaultOption.mode === 'exact') {
       path = service.id;
-      watchedName = service.service;
     } else {
       path = service.service;
-      watchedName = service.service;
     }
 
     if (!path || serviceMap.indexOf(path) < 0 && !watchEventList[watchedName]) {
@@ -138,9 +136,9 @@
   };
 
   var send = function send(that) {
-    status = true; //  如果在心跳请求等待时间内再次发送请求，则心跳请求取消
+    status = true;
+    clearTimeout(that.heartbeatTimer); //  如果在心跳请求等待时间内再次发送请求，则心跳请求取消
 
-    clearTimeout(that.heartbeatTimer);
     that.timer = setTimeout(function () {
       var data = dataQueue.shift();
       ws.send(data); //  发请求后准备执行心跳请求
