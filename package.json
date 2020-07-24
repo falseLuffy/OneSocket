@@ -4,7 +4,9 @@
     "description": "像使用axios一样使用websocket",
     "main": "./src/OneSocket.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "cross-env NODE_ENV=development rollup --config rollup.config.js",
+        "build": "cross-env NODE_ENV=production rollup --config rollup.config.js"
     },
     "keywords": [
         "websocket",
@@ -18,5 +20,22 @@
     "license": "ISC",
     "dependencies": {
         "ws": "^7.3.1"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.10.5",
+        "@babel/preset-env": "^7.10.4",
+        "@rollup/plugin-babel": "^5.1.0",
+        "cross-env": "^7.0.2",
+        "eslint": "^7.5.0",
+        "eslint-config-standard": "^14.1.1",
+        "eslint-plugin-import": "^2.22.0",
+        "eslint-plugin-node": "^11.1.0",
+        "eslint-plugin-promise": "^4.2.1",
+        "eslint-plugin-standard": "^4.0.1",
+        "rollup-plugin-commonjs": "^10.1.0",
+        "rollup-plugin-eslint": "^7.0.0",
+        "rollup-plugin-node-resolve": "^5.2.0",
+        "rollup-plugin-replace": "^2.2.0",
+        "rollup-plugin-uglify": "^6.0.4"
     }
 }
