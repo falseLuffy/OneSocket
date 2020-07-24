@@ -2,7 +2,7 @@
     "name": "one-socket",
     "version": "0.0.1",
     "description": "像使用axios一样使用websocket",
-    "main": "./src/OneSocket.js",
+    "main": "./dist/one-socket.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "dev": "cross-env NODE_ENV=development rollup --config rollup.config.js",
