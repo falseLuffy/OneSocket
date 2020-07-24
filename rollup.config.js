@@ -33,7 +33,7 @@ const fileName = fileNames[ENV]
 const config = {
   input: './src/oneSocket.js',
   output: {
-    file: `output/${fileName}`,
+    file: `dist/${fileName}`,
     format: 'umd',
     name: 'OneSocket'
   },
