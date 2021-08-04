@@ -135,7 +135,7 @@ new OneSocket({
 | updateConfig|  更新配置项| Object: {heartbeatPack:{}}
 | on|  监听后端主动推送的消息 |参数：name,callback
 | remove | 移除用户监听的消息的一个回调，| 参数：name,callback
-| destory |销毁指定名称的所有监控回调，|参数； name 
+| destroy |销毁指定名称的所有监控回调，|参数； name 
 
 
 ### TODO
