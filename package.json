@@ -1,5 +1,5 @@
 {
-    "name": "one-socket",
+    "name": "@falseluffy/one-socket",
     "version": "0.0.1",
     "description": "像使用axios一样使用websocket",
     "main": "./dist/one-socket.min.js",
@@ -12,6 +12,7 @@
         "websocket",
         "Promise"
     ],
+    "files": ["package.json", "dist"],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/falseLuffy/OneSocket.git"

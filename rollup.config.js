@@ -23,9 +23,9 @@ const paths = {
 }
 
 const fileNames = {
-  development: `${packages.name}.js`,
+  development: `${packages.name.split('/').pop()}.js`,
   example: 'example.js',
-  production: `${packages.name}.min.js`
+  production: `${packages.name.split('/').pop()}.min.js`
 }
 
 const fileName = fileNames[ENV]
