@@ -52,7 +52,7 @@ const messageHouse = function (res, service, isSuccess, that) {
   }
 
   if (!path || (serviceMap.indexOf(path) < 0 && !watchEventList[watchedName])) {
-    console.warn(path + ' is not a defined service')
+    // process.env.NODE_ENV === 'development' && console.warn(path + ' is not a defined service');
     return
   }
   (watchEventList[watchedName] || []).forEach(function (callback) {
@@ -140,9 +140,7 @@ export default class OneSocket {
         const resultCode = json.result_code
         next(data, { service }, resultCode === 1, scope)
       },
-      onClose: function () {
-
-      }
+      onClose: function () {}
     }
     this.callbackMap = {}
     this.defaultOption = Object.assign({}, this.defaultOption, option)
