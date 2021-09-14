@@ -7,10 +7,12 @@ const dataQueue = []
 const serviceMap = []
 const watchEventList = {}
 let sendStatus = false
+let timeoutTimer = null
 
 const bindEvent = function (that) {
   const { resolve, reject } = promiseCallback
   ws.addEventListener('open', function () {
+    clearTimeout(timeoutTimer)
     if (resolve) {
       resolve(true)
       promiseCallback = {}
@@ -19,6 +21,7 @@ const bindEvent = function (that) {
   })
 
   ws.addEventListener('close', function (err) {
+    clearTimeout(timeoutTimer)
     // socket关闭后，将停止所有请求
     clearTimeout(that.timer)
     clearTimeout(that.heartbeatTimer)
@@ -123,7 +126,7 @@ export default class OneSocket {
     this.defaultOption = {
       url: '',
       mode: 'vague', // 可选参数 exact， vague
-      timeout: 13000,
+      timeout: 2000,
       interval: 50,
       hasHeartbeat: true,
       heartbeatInterval: 10000,
@@ -162,6 +165,10 @@ export default class OneSocket {
     try {
       ws = new WebSocket(this.defaultOption.url)
       ws.timeoutInterval = this.defaultOption.timeout
+      timeoutTimer = setTimeout(() => {
+        ws.close()
+        timeoutTimer = null
+      }, this.defaultOption.timeout)
     } catch (err) {
       reject(err)
     }

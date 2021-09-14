@@ -1,6 +1,6 @@
 {
     "name": "@falseluffy/one-socket",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "像使用axios一样使用websocket",
     "main": "./dist/one-socket.min.js",
     "scripts": {

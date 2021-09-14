@@ -36,12 +36,15 @@
   var serviceMap = [];
   var watchEventList = {};
   var sendStatus = false;
+  var timeoutTimer = null;
 
   var bindEvent = function bindEvent(that) {
     var _promiseCallback = promiseCallback,
         resolve = _promiseCallback.resolve,
         reject = _promiseCallback.reject;
     ws.addEventListener('open', function () {
+      clearTimeout(timeoutTimer);
+
       if (resolve) {
         resolve(true);
         promiseCallback = {};
@@ -49,7 +52,8 @@
       }
     });
     ws.addEventListener('close', function (err) {
-      // socket关闭后，将停止所有请求
+      clearTimeout(timeoutTimer); // socket关闭后，将停止所有请求
+
       clearTimeout(that.timer);
       clearTimeout(that.heartbeatTimer);
       console.warn('socket has closed');
@@ -165,7 +169,7 @@
         url: '',
         mode: 'vague',
         // 可选参数 exact， vague
-        timeout: 13000,
+        timeout: 2000,
         interval: 50,
         hasHeartbeat: true,
         heartbeatInterval: 10000,
@@ -215,6 +219,10 @@
         try {
           ws = new WebSocket(this.defaultOption.url);
           ws.timeoutInterval = this.defaultOption.timeout;
+          timeoutTimer = setTimeout(function () {
+            ws.close();
+            timeoutTimer = null;
+          }, this.defaultOption.timeout);
         } catch (err) {
           reject(err);
         }
