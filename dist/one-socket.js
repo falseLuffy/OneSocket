@@ -127,7 +127,7 @@
         } else {
           sendStatus = false;
         }
-      } else if (ws.readyState === WebSocket.CONNECTING && ws.reconnectAttempts === 0) {
+      } else if (ws.readyState === WebSocket.CONNECTING) {
         send(that);
       }
     }, that.defaultOption.interval);
