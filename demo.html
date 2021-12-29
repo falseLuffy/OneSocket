@@ -5,12 +5,92 @@
   <title>Title</title>
 </head>
 <body>
+<button id="close">关闭</button>
+<button id="open">开启</button>
 <script src="./dist/one-socket.js"></script>
 <script>
-  const a = new OneSocket({
-    url: '192.168.69.131'
+  let WS
+   let timer
+  function connect() {
+    const protocolMap = {
+      'http:': 'ws',
+      'https:': 'wss'
+    }
+    let url = ''
+    if (window.__POWERED_BY_QIANKUN__) {
+      // eslint-disable-next-line no-undef,camelcase
+      url = __webpack_public_path__.split('//')[1]
+    } else {
+      url = window.location.host + '/'
+    }
+    const config = {
+      url: `${protocolMap[window.location.protocol]}://192.168.69.232/ws/home/overview`,
+      hasHeartbeat: true,
+      heartbeatInterval: 50000,
+      responseParser: responseParser,
+      onClose: function () {
+        console.log('----')
+        clearInterval(timer)
+      }
+    }
+    const INSTANCE =  new OneSocket(config)
+      .then((ws) => {
+        WS = ws
+        const params = {
+          lang: 'zh_CN',
+          service: 'connect',
+          token: ''
+        }
+        ws.send('connect', params)
+          .then((res) => {
+            debugger
+            localStorage.setItem('token', JSON.stringify({ token: res.token }))
+            ws.updateConfig({
+              heartbeatPack: {
+                lang: 'zh_cn',
+                service: 'ping',
+                token: res.token
+              }
+            })
+          })
+          .catch((err) => {
+            console.log(err)
+          })
+
+        /*timer = setInterval(() => {
+          ws.send('state', {
+            lang: 'zh_CN',
+            service: 'state',
+            token: ''
+          } )
+        }, 5000)
+        ws.on('state', (data) => {
+          console.log(data)
+        })*/
+      })
+    window.INSTANCE = INSTANCE
+  }
+
+  function responseParser (res, next, scope) {
+    const json = JSON.parse(res.data)
+    let data = json.result_data || {}
+    const service = data.service || 'ping'
+    const ResultCode = json.result_code
+    data = Object.assign({}, data, {
+      message: json.result_msg,
+      code: json.result_code
+    })
+    next(data, { service }, ResultCode === 1, scope)
+  }
+  connect()
+
+  document.getElementById('close').addEventListener('click', function () {
+    WS.close()
   })
-  console.log(a.a)
+
+  document.getElementById('open').addEventListener('click', function () {
+    connect()
+  })
 </script>
 </body>
 </html>
