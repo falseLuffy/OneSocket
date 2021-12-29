@@ -12,7 +12,10 @@
         "websocket",
         "Promise"
     ],
-    "files": ["package.json", "dist"],
+    "files": [
+        "package.json",
+        "dist"
+    ],
     "repository": {
         "type": "git",
         "url": "git+https://github.com/falseLuffy/OneSocket.git"
@@ -24,6 +27,7 @@
     },
     "devDependencies": {
         "@babel/core": "^7.10.5",
+        "@babel/plugin-proposal-class-properties": "^7.16.5",
         "@babel/preset-env": "^7.10.4",
         "@rollup/plugin-babel": "^5.1.0",
         "cross-env": "^7.0.2",
