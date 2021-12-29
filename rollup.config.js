@@ -47,7 +47,8 @@ const config = {
     babel({
       babelHelpers: 'bundled',
       presets: ['@babel/preset-env'],
-      exclude: 'node_modules/**'
+      exclude: 'node_modules/**',
+      plugins: ['@babel/plugin-proposal-class-properties']
     }),
     replace({
       exclude: 'node_modules/**',
