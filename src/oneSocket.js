@@ -1,112 +1,6 @@
 if (!WebSocket) {
   throw new Error('WebSocket is not exist')
 }
-let ws = null
-let promiseCallback = []
-const dataQueue = []
-const serviceMap = []
-const watchEventList = {}
-let sendStatus = false
-let timeoutTimer = null
-
-const bindEvent = function (that) {
-  const { resolve, reject } = promiseCallback
-  ws.addEventListener('open', function () {
-    clearTimeout(timeoutTimer)
-    if (resolve) {
-      resolve(true)
-      promiseCallback = {}
-      if (that.defaultOption.hasHeartbeat) heartbeat(that)
-    }
-  })
-
-  ws.addEventListener('close', function (err) {
-    clearTimeout(timeoutTimer)
-    // socket关闭后，将停止所有请求
-    clearTimeout(that.timer)
-    clearTimeout(that.heartbeatTimer)
-    console.warn('socket has closed')
-    that.defaultOption.onClose(err)
-  })
-
-  ws.addEventListener('error', function (err) {
-    if (reject) {
-      reject(false)
-      promiseCallback = {}
-    } else {
-      watchEventList.error.forEach((callback) => {
-        callback(err)
-      })
-    }
-  })
-
-  ws.addEventListener('message', function (res) {
-    that.defaultOption.responseParser(res, messageHouse, that)
-  })
-}
-
-const messageHouse = function (res, service, isSuccess, that) {
-  let path = null
-  const watchedName = service.service
-  if (that.defaultOption.mode === 'exact') {
-    path = service.id
-  } else {
-    path = service.service
-  }
-
-  if (!path || (serviceMap.indexOf(path) < 0 && !watchEventList[watchedName])) {
-    // process.env.NODE_ENV === 'development' && console.warn(path + ' is not a defined service');
-    return
-  }
-  (watchEventList[watchedName] || []).forEach(function (callback) {
-    callback(res)
-  })
-  if (!that.callbackMap[path]) return
-  const callback = that.callbackMap[path].shift()
-  if (!that.callbackMap[path].length) that.callbackMap[path] = undefined
-  if (isSuccess) {
-    callback ? callback[0](res) : console.error(`${path}'s callback is undefined`)
-  } else {
-    callback ? callback[1](res) : console.error(`${path}'s callback is undefined`)
-  }
-}
-
-const queueSend = function (data, that) {
-  dataQueue.push(data)
-  if (!sendStatus && dataQueue.length) {
-    send(that)
-  }
-}
-
-const send = function (that) {
-  sendStatus = true
-  clearTimeout(that.heartbeatTimer) //  如果在心跳请求等待时间内再次发送请求，则心跳请求取消
-  that.timer = setTimeout(function () {
-    if (ws.readyState === WebSocket.OPEN) {
-      const data = dataQueue.shift()
-      ws.send(data)
-      //  发请求后准备执行心跳请求
-      if (that.defaultOption.hasHeartbeat) heartbeat(that)
-      if (dataQueue.length) {
-        send(that)
-      } else {
-        sendStatus = false
-      }
-    } else if (ws.readyState === WebSocket.CONNECTING) {
-      send(that)
-    }
-  }, that.defaultOption.interval)
-}
-
-const heartbeat = function (that) {
-  const { heartbeatPack, heartbeatInterval } = that.defaultOption
-  that.heartbeatTimer = setTimeout(function () {
-    ws.send(JSON.stringify(Object.assign({}, heartbeatPack, {
-      id: uuid()
-    })))
-    heartbeat(that)
-  }, heartbeatInterval)
-}
 
 function uuid () {
   var s = []
@@ -122,6 +16,113 @@ function uuid () {
 }
 
 export default class OneSocket {
+  ws = null
+  promiseCallback = []
+  dataQueue = []
+  serviceMap = []
+  watchEventList = {}
+  sendStatus = false
+  timeoutTimer = null
+
+  bindEvent = (that) => {
+    const { resolve, reject } = this.promiseCallback
+    this.ws.addEventListener('open',  () => {
+      clearTimeout(this.timeoutTimer)
+      if (resolve) {
+        resolve(true)
+        this.promiseCallback = {}
+        if (that.defaultOption.hasHeartbeat) this.heartbeat(that)
+      }
+    })
+
+    this.ws.addEventListener('close',  (err) => {
+      clearTimeout(this.timeoutTimer)
+      // socket关闭后，将停止所有请求
+      clearTimeout(that.timer)
+      clearTimeout(that.heartbeatTimer)
+      console.warn('socket has closed')
+      that.defaultOption.onClose(err)
+    })
+
+    this.ws.addEventListener('error', (err) => {
+      if (reject) {
+        reject(false)
+        this.promiseCallback = {}
+      } else {
+        this.watchEventList.error.forEach((callback) => {
+          callback(err)
+        })
+      }
+    })
+
+    this.ws.addEventListener('message',  (res) => {
+      that.defaultOption.responseParser(res, this.messageHouse, that)
+    })
+  }
+
+  messageHouse = (res, service, isSuccess, that) => {
+    let path = null
+    const watchedName = service.service
+    if (that.defaultOption.mode === 'exact') {
+      path = service.id
+    } else {
+      path = service.service
+    }
+
+    if (!path || (this.serviceMap.indexOf(path) < 0 && !that.watchEventList[watchedName])) {
+      // process.env.NODE_ENV === 'development' && console.warn(path + ' is not a defined service');
+      return
+    }
+    (that.watchEventList[watchedName] || []).forEach( (callback) => {
+      callback(res)
+    })
+    if (!that.callbackMap[path]) return
+    const callback = that.callbackMap[path].shift()
+    if (!that.callbackMap[path].length) that.callbackMap[path] = undefined
+    if (isSuccess) {
+      callback ? callback[0](res) : console.error(`${path}'s callback is undefined`)
+    } else {
+      callback ? callback[1](res) : console.error(`${path}'s callback is undefined`)
+    }
+  }
+
+  queueSend = (data, that) => {
+    this.dataQueue.push(data)
+    if (!this.sendStatus && this.dataQueue.length) {
+      this.sendData(that)
+    }
+  }
+
+  sendData = (that) => {
+    this.sendStatus = true
+    clearTimeout(that.heartbeatTimer) //  如果在心跳请求等待时间内再次发送请求，则心跳请求取消
+    that.timer = setTimeout( () => {
+      if (this.ws.readyState === WebSocket.OPEN) {
+        const data = this.dataQueue.shift()
+        this.ws.send(data)
+        //  发请求后准备执行心跳请求
+        if (that.defaultOption.hasHeartbeat) this.heartbeat(that)
+        if (this.dataQueue.length) {
+          this.sendData(that)
+        } else {
+          this.sendStatus = false
+        }
+      } else if (this.ws.readyState === WebSocket.CONNECTING) {
+        this.sendData(that)
+      }
+    }, that.defaultOption.interval)
+  }
+
+  heartbeat = (that) => {
+    const { heartbeatPack, heartbeatInterval } = that.defaultOption
+    that.heartbeatTimer = setTimeout( () => {
+      this.ws.send(JSON.stringify(Object.assign({}, heartbeatPack, {
+        id: uuid()
+      })))
+      this.heartbeat(that)
+    }, heartbeatInterval)
+  }
+
   constructor (option) {
     this.defaultOption = {
       url: '',
@@ -150,31 +151,31 @@ export default class OneSocket {
     this.heartbeatTimer = null
     const { instance } = this.defaultOption
     this.__Promise__ = new Promise(function (resolve, reject) {
-      promiseCallback = { resolve, reject }
+      this.promiseCallback = { resolve, reject }
       if (!instance) {
         this.init(option)
       } else {
-        ws = instance
+        this.ws = instance
       }
-      bindEvent(this)
+      this.bindEvent(this)
     }.bind(this))
   }
 
-  init () {
-    const { reject } = promiseCallback
+  init = () => {
+    const { reject } = this.promiseCallback
     try {
-      ws = new WebSocket(this.defaultOption.url)
-      ws.timeoutInterval = this.defaultOption.timeout
-      timeoutTimer = setTimeout(() => {
-        ws.close()
-        timeoutTimer = null
+      this.ws = new WebSocket(this.defaultOption.url)
+      this.ws.timeoutInterval = this.defaultOption.timeout
+      this.timeoutTimer = setTimeout(() => {
+        this.ws.close()
+        this.timeoutTimer = null
       }, this.defaultOption.timeout)
     } catch (err) {
       reject(err)
     }
   }
 
-  send (path, data) {
+  send = (path, data) => {
     const uuidString = uuid()
     const { mode } = this.defaultOption
 
@@ -182,7 +183,7 @@ export default class OneSocket {
       path = uuidString
     }
 
-    serviceMap.push(path)
+    this.serviceMap.push(path)
     return new Promise(function (resolve, reject) {
       if (!this.callbackMap[path]) {
         this.callbackMap[path] = [
@@ -194,47 +195,47 @@ export default class OneSocket {
       if (mode === 'exact') {
         data = Object.assign({}, data, { id: uuidString })
       }
-      queueSend(JSON.stringify(data), this)
+      this.queueSend(JSON.stringify(data), this)
     }.bind(this))
   }
 
-  close () {
+  close = () => {
     // socket关闭后，将停止所有请求
     clearTimeout(this.timer)
     clearTimeout(this.heartbeatTimer)
-    ws.close()
+    this.ws.close()
   }
 
-  then (callback) {
+  then = (callback) => {
     return this.__Promise__.then(function (data) {
       // eslint-disable-next-line standard/no-callback-literal
       return callback(this)
     }.bind(this))
   }
 
-  catch (callback) {
+  catch = (callback) => {
     return this.__Promise__.catch(function (err) {
       return callback(err)
     })
   }
 
   on (name, callback) {
-    if (watchEventList[name]) {
-      watchEventList[name].push(callback)
+    if (this.watchEventList[name]) {
+      this.watchEventList[name].push(callback)
     } else {
-      watchEventList[name] = [callback]
+      this.watchEventList[name] = [callback]
     }
   }
 
   remove (name, callback) {
-    const index = watchEventList[name].findIndex(item => {
+    const index = this.watchEventList[name].findIndex(item => {
       return item === callback
     })
-    watchEventList.splice(index, 1)
+    this.watchEventList.splice(index, 1)
   }
 
   destroy (name) {
-    delete watchEventList[name]
+    delete this.watchEventList[name]
   }
 
   updateConfig ({ heartbeatPack }) {
