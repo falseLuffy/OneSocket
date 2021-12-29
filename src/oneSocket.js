@@ -68,7 +68,7 @@ export default class OneSocket {
       path = service.service
     }
 
-    if (!path || (!that.watchEventList[watchedName])) {
+    if (!path || (!that.callbackMap[path] && !that.watchEventList[watchedName])) {
       // process.env.NODE_ENV === 'development' && console.warn(path + ' is not a defined service');
       return
     }
