@@ -19,7 +19,6 @@ export default class OneSocket {
   ws = null
   promiseCallback = []
   dataQueue = []
-  serviceMap = []
   watchEventList = {}
   sendStatus = false
   timeoutTimer = null
@@ -69,7 +68,7 @@ export default class OneSocket {
       path = service.service
     }
 
-    if (!path || (this.serviceMap.indexOf(path) < 0 && !that.watchEventList[watchedName])) {
+    if (!path || (!that.watchEventList[watchedName])) {
       // process.env.NODE_ENV === 'development' && console.warn(path + ' is not a defined service');
       return
     }
@@ -183,7 +182,6 @@ export default class OneSocket {
       path = uuidString
     }
 
-    this.serviceMap.push(path)
     return new Promise(function (resolve, reject) {
       if (!this.callbackMap[path]) {
         this.callbackMap[path] = [
