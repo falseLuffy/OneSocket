@@ -43,7 +43,6 @@
         }
         ws.send('connect', params)
           .then((res) => {
-            debugger
             localStorage.setItem('token', JSON.stringify({ token: res.token }))
             ws.updateConfig({
               heartbeatPack: {
